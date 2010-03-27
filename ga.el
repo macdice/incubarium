@@ -16,18 +16,12 @@
 
 ;;; Commentary:
 ;;
-;; An educational excercise in basic AI hacking.
-;;
-;; TODO -- more crossover algorithms
-;; * ga-two-point-crossover
-;; * ga-uniform-crossover
-;; * ga-half-uniform-crossover
-;; * ga-ordered-crossover
-;; * ga-edge-recombination-crossover
-;; * ga-partially-mapped-crossover
+;; Educational excercises to learn about basic genetic algorithm
+;; programming.
 ;;
 ;; REFERENCES
 ;;
+;; * http://en.wikipedia.org/wiki/Genetic_algorithm
 ;; * http://en.wikipedia.org/wiki/Crossover_(genetic_algorithm)
 
 ;;; History:
@@ -64,6 +58,16 @@ sizes from the interval [MIN-SIZE), MAX-SIZE)."
   (loop repeat size
         collect
         (ga-make-random-genotype min-value max-value min-size max-size)))
+
+;;; CROSSOVER OPERATIONS
+;;
+;; TODO
+;; * ga-two-point-crossover
+;; * ga-uniform-crossover
+;; * ga-half-uniform-crossover
+;; * ga-ordered-crossover
+;; * ga-edge-recombination-crossover
+;; * ga-partially-mapped-crossover
 
 (defun ga-one-point-crossover (male female)
   "Return two new genotypes which result from combining MALE and FEMALE.
