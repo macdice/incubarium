@@ -124,9 +124,10 @@ to the combined length of MALE and FEMALE."
   "Generate an initial population made from random geotypes.
 The result is a list of SIZE lists, each of which is randomly
 created with values from the interval [MIN-VALUE, MAX-VALUE), and
-sizes from the interval [MIN-SIZE), MAX-SIZE)."
+sizes from the interval [MIN-SIZE, MAX-SIZE)."
   (loop repeat size collect
-        (ga-make-random-genotype min-value max-value min-size max-size)))
+        (ga-make-individual
+         (ga-make-random-genotype min-value max-value min-size max-size))))
 
 (defun ga-evaluate-population (population fitness-function)
   "Evaluate POPULATION assigning a fitnesses using FITNESS-FUNCTION.
