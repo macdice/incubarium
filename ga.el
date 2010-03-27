@@ -97,7 +97,7 @@ to the combined length of MALE and FEMALE."
 ;; * ga-two-point-crossover
 ;; * ga-uniform-crossover
 ;; * ga-half-uniform-crossover
-;; * ga-ordered-crossover
+;; * ga-ordered-crossover (for the travelling salesman problem!)
 ;; * ga-edge-recombination-crossover
 ;; * ga-partially-mapped-crossover
 
