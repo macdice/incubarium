@@ -22,6 +22,30 @@
 ;; an earlier version that ran on Termite Scheme, a side-effect free
 ;; distributed Lisp).
 ;;
+;; This is a set of GP-specific functions which are designed to work
+;; with the support for selection and breeding provided in ga.el.
+;; Genetic programming is a special case of the genetic algorithm
+;; where genotypes are identical to phenotypes, that is, the genotypes
+;; are the program trees we want to produce.  We need to replace a
+;; couple of parts of ga.el to achieve this:
+;;
+;; * instead of ga-make-random-genotype, we have
+;;   gp-make-random-program 
+;;
+;; * instead of ga-make-population, we have gp-grow-population,
+;;   gp-full-population and gp-ramped-population which create
+;;   populations using the above
+;;
+;; * instead of the various ga-XXX-crossover functions we have
+;;   gp-tree-random-recombine
+;;
+;; * the IDENTITY function with a zero probability should be used for
+;;   mutation (the literature suggests it doesn't help much with GP,
+;;   but it could of course be easily done)
+;;
+;; Otherwise we can use the standard GA-TOURNAMENT, GA-ROULETTE etc
+;; functions for genetic programming.
+;;
 ;; REFERENCES
 ;; - http://en.wikipedia.org/wiki/Genetic_programming
 ;; - Genetic Programming, John Koza, 1992
@@ -43,49 +67,7 @@
 
 (require 'cl)
 
-;;; OPERATIONS ON INDIVIDUALS
-
-(defun gp-make-individual (program &optional fitness)
-  "Construct an individual from PROGRAM (tree) and FITNESS."
-  ;; we just use pairs to hold program/fitness for now
-  ;; TODO is there any point in defining a struct for this?
-  ;; I like the simplicity of the pair-based approach
-  (cons program fitness))
-
-(defun gp-individual-program (individual)
-  "Return the program (tree) component of INDIVIDUAL."
-  (car individual))
-
-(defun gp-individual-fitness (individual)
-  "Return the fitness component of INDIVIDUAL."
-  (cdr individual))
-
 ;;; OPERATIONS ON PROGRAM TREES
-
-(defun gp-pick-terminal (terminals)
-  "Randomly pick a terminal from TERMINALS, generating any random values.
-Terminals can be numbers, symbols, or lists of the form (random
-<min> <max>) which generate a random number in the interval [min,
-max).  The random number will be an integer or a float depending
-on the type of the min and max constants provided."
-  (let ((terminal (pick-one terminals)))
-    (cond ((and (consp terminal)
-                (eq (first terminal) 'random))
-           (unless (and (= (length terminal) 3)
-                        (numberp (second terminal))
-                        (numberp (third terminal)))
-             (error "bad syntax for terminal: %S" terminal)) 
-           (let ((min (second terminal))
-                 (max (third terminal)))
-             (if (or (floatp min) (floatp max))
-                 (+ min
-                    (* (/ (random 1000000) 1000000.0)
-                       (- max min)))
-               (+ min (random (- max min))))))
-          ((or (numberp terminal) (symbolp terminal))
-           terminal)
-          (t
-           (error "bad syntax for terminal: %S" terminal)))))
 
 (defun gp-make-random-program (functions terminals min-depth max-depth)
   "Generate a random program.
@@ -98,7 +80,8 @@ MIN-DEPTH and MAX-DEPTH (inclusive)."
   (labels ((iter (depth)
              (if (and (< depth max-depth)
                       (or (< depth min-depth) 
-                          (zerop (random 2)))) ;; TODO -- depths not equally likely!
+                          (= depth max-depth)
+                          (zerop (random (- max-depth depth)))))
                  ;; generate a function (ie grow bigger)
                  (let* ((pair (pick-one functions))
                         (function (car pair))
@@ -193,47 +176,36 @@ so we try everything.  See Koza92 6.2 p92."
            ((0) (gp-make-random-program functions terminal min-depth depth))
            ((1) (gp-make-random-program functions terminals depth depth))))))
 
-(defun gp-evaluate-population (population fitness-function)
-  "Evaluate POPULATION assigning a fitnesses using FITNESS-FUNCTION.
-Population is a list of individuals ie (program . fitness) pairs.
-The result is a new population list, sorted by fitness.
-Individuals with NIL for fitness are evaluated.  Individuals that
-already have a fitness value are not reassessed; this avoids
-unnecessary reevaluation in cases where individuals are copied
-into the next generation verbatim."
-  (gp-non-destructive-sort
-   (mapcar (lambda (individual)
-             (if (null (gp-individual-fitness individual))
-                 (gp-make-individual 
-                  (gp-individual-program individual)
-                  (funcall fitness-function 
-                           (gp-individual-program individual)))
-                 individual))
-           population)
-   (lambda (left right)
-     (< (gp-individual-fitness left) (gp-individual-fitness right)))))
-
 ;;; UTILITIES
-
-(defun gp-non-destructive-sort (list predicate)
-  "Return a new list with the elements of LIST sorted using PREDICATE."
-  ;; this function is here because I hate the fact that Emacs Lisp's
-  ;; SORT (just like that of Common Lisp, MacLisp and probably earlier
-  ;; dialects) is destructive -- this seems to me to be wanton
-  ;; destruction up with which I will not put; there should have been
-  ;; a SORT and an NSORT (cf SRFI-95 SORT and SORT!, although the Nxxx
-  ;; functions don't promise to mutate their input to achieve their
-  ;; goal like the xxx! functions, they merely have the option of
-  ;; doing so... an interesting difference), and if I ever succeed in
-  ;; building a time machine (easy) and getting into MIT (hard) I will
-  ;; make my opinion known at the appropriate time to sort this issue
-  ;; out once and for all
-  (let ((temporary (copy-seq list)))
-    (sort temporary predicate)))
 
 (defun gp-pick-one (list)
   "Return a randomly selected item from LIST."
   (elt list (random (length list))))
+
+(defun gp-pick-terminal (terminals)
+  "Randomly pick a terminal from TERMINALS, generating any random values.
+Terminals can be numbers, symbols, or lists of the form (random
+<min> <max>) which generate a random number in the interval [min,
+max).  The random number will be an integer or a float depending
+on the type of the min and max constants provided."
+  (let ((terminal (pick-one terminals)))
+    (cond ((and (consp terminal)
+                (eq (first terminal) 'random))
+           (unless (and (= (length terminal) 3)
+                        (numberp (second terminal))
+                        (numberp (third terminal)))
+             (error "bad syntax for terminal: %S" terminal)) 
+           (let ((min (second terminal))
+                 (max (third terminal)))
+             (if (or (floatp min) (floatp max))
+                 (+ min
+                    (* (/ (random 1000000) 1000000.0)
+                       (- max min)))
+               (+ min (random (- max min))))))
+          ((or (numberp terminal) (symbolp terminal))
+           terminal)
+          (t
+           (error "bad syntax for terminal: %S" terminal)))))
 
 ;;; TESTS
 
