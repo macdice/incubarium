@@ -75,22 +75,6 @@ If not, return nil."
       (ge-collect-every-former list)
       nil))
 
-(defun ge-codon->phenotype (grammar codon non-terminal)
-  "Use GRAMMAR to find the phenotype for CODON of type NON-TERMINAL."
-  (let ((rule (assq non-terminal grammar)))
-    (unless rule
-      (error "Unknown non-terminal %s" non-terminal))
-    (unless (eq (second rule) '=)
-      (error "Syntax error: %S" rule))
-    (let* ((expansion (cddr rule))
-           (choices (ge-grammar-choices expansion)))
-      (if choices
-          (nth (% codon (length choices)) choices)
-        (let ((value (car expansion)))
-          (cond ((numberp value) value)
-                ((consp value) value)
-                (t (error "Syntax error: %S" value))))))))
-
 (defun ge-genotype->phenotype (genotype grammar)
   "Convert GENOTYPE into a phenotype using GRAMMAR."
   (let ((codons genotype))
@@ -100,9 +84,16 @@ If not, return nil."
                (cond ((numberp template) template)
                      ((and (symbolp template)
                            (ge-non-terminal-p template))
-                      (render (ge-codon->phenotype grammar
-                                                   (pop codons)
-                                                   template)))
+                      (let ((rule (assq template grammar)))
+                        (unless rule
+                          (error "Unknown non-terminal %s" template))
+                        (unless (eq (second rule) '=)
+                          (error "Syntax error: %S" rule))
+                        (render 
+                         (let ((choices (ge-grammar-choices (cddr rule))))
+                           (if choices
+                               (nth (% (pop codons) (length choices)) choices)
+                             (third rule))))))
                      ((symbolp template) template)
                      ((and (consp template)
                            (eq (first template) 'random))
@@ -120,7 +111,7 @@ If not, return nil."
                    (<constant> = 1 | 2 | 3)))
         (genotype '(0 0 1 1 1 1)))
     (assert (equal (ge-genotype->phenotype genotype grammar)
-                   '(- 2 1)))))
+                   '(+ 2 2)))))
                                      
 (provide 'ge)
 
