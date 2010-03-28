@@ -101,6 +101,20 @@ to the combined length of MALE and FEMALE."
 ;; * ga-edge-recombination-crossover
 ;; * ga-partially-mapped-crossover
 
+(defun ga-make-single-point-mutator (min-value max-value)
+  "Make a function to randomise one integer to [MIN-VALUE, MAX-VALUE)."
+  (lexical-let ((min-value min-value)
+                (max-value max-value))
+    (lambda (genotype)
+      (let ((point (random (length genotype))))
+        (append (ga-take genotype point)
+                (list (+ min-value (random (- max-value min-value))))
+                (ga-drop genotype (1+ point)))))))
+
+;; TODO
+;; * more kinds of mutation, support for real values etc
+;; * element swapping, ...
+
 ;; OPERATIONS ON INDIVIDUALS (GENOTYPE/FITNESS PAIRS)
 
 (defun ga-make-individual (genotype &optional fitness)
@@ -141,9 +155,9 @@ into the next generation verbatim."
    (mapcar (lambda (individual)
              (if (null (ga-individual-fitness individual))
                  (ga-make-individual 
-                  (ga-individual-program individual)
+                  (ga-individual-genotype individual)
                   (funcall fitness-function 
-                           (ga-individual-program individual)))
+                           (ga-individual-genotype individual)))
                  individual))
            population)
    (lambda (left right)
@@ -190,8 +204,12 @@ to make up the remainder."
                         (list (ga-make-individual a)
                               (ga-make-individual b))))
               (loop repeat mutations collect
-                    (ga-make-individual (funcall mutation-function (winner))))
+                    (ga-make-individual 
+                     (funcall mutation-function 
+                              (ga-individual-genotype (winner)))))
               (loop repeat copies collect (winner))))))
+
+;; TODO ga-roulette, ga-roulette-tournament, ... ?
 
 ;;; UTILITIES
 
