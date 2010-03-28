@@ -18,6 +18,17 @@
 ;;
 ;; UNFINISHED -- WATCH THIS SPACE
 ;;
+;; GRAMMARS
+;;
+;; Grammars are lists constisting of at least one production rule.
+;; Production rules are lists of one of the following forms:
+;; 
+;; (<name> = value)                 ;; expands to a value
+;; (<name> = (value ...))           ;; expands to a form
+;; (<name> = value | value ...)     ;; expands to a choice
+;;
+;; In all of the above cases, value could be a constant number or ... TODO
+;;
 ;; The plan:
 ;; * use GA support from ga.el, but provide tools for GE fitness functions
 ;;
