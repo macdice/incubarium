@@ -212,8 +212,10 @@ The error is returned."
                             (n 0.5)
                             (m 0.1))
   "Train NETWORK using TRAINING-DATA.
-The neural network is trained ITERATIONS times, using learning
-rate N and momentum M."
+The training data should be a list of lists containing two
+vectors of numbers, representing the input values and expected
+output values.  The neural network is trained ITERATIONS times,
+using learning rate N and momentum M."
   ;; TODO return the error!
   (loop repeat iterations do
         (loop for (inputs targets) in training-data
