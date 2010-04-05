@@ -131,8 +131,8 @@ The the output activation node vector is returned."
         for i from 0 do
         (setf (aref (ann-network-input-activation network) i) value))
   ;; compute hidden activations
-  (let ((input-weights (ann-network-input-weights network))
-        (input-activation (ann-network-input-activation network))
+  (let ((input-weights    (ann-network-input-weights network))
+        (input-activation  (ann-network-input-activation network))
         (hidden-activation (ann-network-hidden-activation network)))
     (loop for j from 0 below (ann-network-hidden-count network) do
           (setf (aref hidden-activation j)
@@ -142,7 +142,7 @@ The the output activation node vector is returned."
                        sum (* input-act
                               (ann-matrix-get input-weights i j)))))))
   ;; compute output activations
-  (let ((output-weights (ann-network-output-weights network))
+  (let ((output-weights    (ann-network-output-weights network))
         (hidden-activation (ann-network-hidden-activation network))
         (output-activation (ann-network-output-activation network)))
     (loop for k from 0 below (ann-network-output-count network) do
@@ -159,14 +159,13 @@ The learning rate should be provided in N, and the momentum in M.
 The error is returned."
   (unless (= (length targets) (ann-network-output-count network))
     (error "Wrong number of target values"))
-  (let ((output-count (ann-network-output-count network))
-        (output-activation (ann-network-output-activation network))
-        (output-weights (ann-network-output-weights network))
-        (output-change (ann-network-output-change network))
+  (let ((output-activation (ann-network-output-activation network))
+        (output-weights    (ann-network-output-weights network))
+        (output-change     (ann-network-output-change network))
         (hidden-activation (ann-network-hidden-activation network))
-        (input-weights (ann-network-input-weights network))
-        (input-change (ann-network-input-change network))
-        (input-activation (ann-network-input-activation network)))
+        (input-weights     (ann-network-input-weights network))
+        (input-change      (ann-network-input-change network))
+        (input-activation  (ann-network-input-activation network)))
     ;; compute the output and hidden errors terms
     (let* ((output-deltas 
             (loop for target across targets
@@ -203,7 +202,7 @@ The error is returned."
                         (+ (* n change) (aref input-change-row j)))
                   (setf (aref input-change-row j) change))))
     ;; calculate and return error
-    (loop for target in targets
+    (loop for target across targets
           for output across output-activation
           sum (* 0.5 (expt (- target output) 2)))))
 
