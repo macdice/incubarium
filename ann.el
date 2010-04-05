@@ -27,6 +27,9 @@
 ;; The code uses Scheme-style exclamation marks to indicate mutation
 ;; of function arguments, because today I am feeling schematic.  
 ;;
+;; It probably goes without saying that the equivalent code runs
+;; thousands of times faster in SBCL.
+;;
 ;; Some relevant web pages:
 ;; 
 ;; * http://en.wikipedia.org/wiki/Backpropagation
