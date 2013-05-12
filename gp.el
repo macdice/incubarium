@@ -160,7 +160,7 @@ This means that individuals have the full maximum size on all
 branches of initial programs.  See Koza92 6.2 p92."
   (gp-grow-population size functions terminals depth depth))
 
-(defun gp-ramped-population (size functions terminal min-depth max-depth)
+(defun gp-ramped-population (size functions terminals min-depth max-depth)
   "Generate a population using the 'ramped half-and-half' method.
 This means that half of the individuals are generated using
 'grow' and the rest using 'full' method, for a range of depths
@@ -173,7 +173,7 @@ so we try everything.  See Koza92 6.2 p92."
         collect
         (gp-make-individual
          (case (% count 2)
-           ((0) (gp-make-random-program functions terminal min-depth depth))
+           ((0) (gp-make-random-program functions terminals min-depth depth))
            ((1) (gp-make-random-program functions terminals depth depth))))))
 
 ;;; UTILITIES
